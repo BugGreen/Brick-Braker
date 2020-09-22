@@ -1,94 +1,94 @@
 const canvas = document.getElementById( 'lienzo' );
 
 //Esto permite 'colorear' el fondo:
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
 canvas.style.backgroundColor = '#eeff00';
+
+//Crear un nuevo atributo al objeto canvas:
+canvas.resize = function () {
+    this.width = window.innerWidth;
+    this.height = window.innerHeight;
+}
 
 //Esto es para conseguir un contexto gráfico:
 const ctx = canvas.getContext('2d');
 
-const bricksPerRow = 8;
-const numRows = 3;
-const gap = 5;
+// Ahora Wall es un objeto:
 
-const bricks = [];
+const wall = {
+    bricksPerRow: 8,
+    numRows: 3,
+    gap: 5,
 
-function createWall() {
-    for ( let row = 0; row < numRows; row ++) {
-        for (let col = 0; col < bricksPerRow; col ++) {
-            // Creaciçon del objeto brick para cada col:
-            const brick = {
-                // Atributos:
-                c: col,
-                r: row,
-                w: 0,
-                h: 0,
-                color: 'orangered',
-                //Métodos:
-                paint: function () {
-                    // this. nos permite referenciar las propiedades
-                    // de este objeto.
-                    const x = this.c * (this.w + gap);
-                    const y = this.r * (this.h + gap);
+    bricks: [],
 
-                    ctx.fillStyle = this.color;
-                    ctx.fillRect( x, y, this.w, this.h );
-                },
+    init: function () {
+        for ( let row = 0; row < this.numRows; row++ ){
+            for (let column = 0; column < this.bricksPerRow; column++ ){
+                const brick = {
+                    // Atributos:
+                    c: column,
+                    r: row,
+                    w: 0,
+                    h: 0,
+                    color: 'orangered',
+                    visible: true,
 
-                resize: function() {
-                    this.w = (window.innerWidth - (bricksPerRow - 1) * gap) / bricksPerRow;
-                    this.h = this.w / 4;
-                }
+                    //Métodos:
+                    paint: function () {
+                        if (this.visible){
+                            // this. nos permite referenciar las propiedades
+                            // de este objeto.
+                            const x = this.c * (this.w + wall.gap);
+                            const y = this.r * (this.h + wall.gap);
 
-            };
+                            ctx.fillStyle = this.color;
+                            ctx.fillRect( x, y, this.w, this.h );
+                        }
+                        else {
+                          // No aún
+                        }
 
-            bricks.push( brick );
+                    },
+
+                    resize: function() {
+                        this.w = (window.innerWidth - (wall.bricksPerRow - 1) * wall.gap) / wall.bricksPerRow;
+                        this.h = this.w / 4;
+                    }
+
+                };
+
+                //Seguimos dentro del for:
+                this.bricks.push( brick );
+            }
         }
+    },
+
+    paint: function () {
+        // PROGRAMACIÓN FUNCIONAL:
+        // Toma cada objeto Brick del array bricks
+        // y lo pasa por el método paint.
+        this.bricks.forEach( function ( brick ){
+            brick.paint();
+        });
+    },
+
+    resize: function () {
+        this.bricks.forEach( ( brick ) => brick.resize() );
     }
-}
+};
 
-function drawBrick( column, row ) {
-    const idx = row * bricksPerRow + column;
+// La función createWall() ya no existe y es reemplazada por:
 
-    bricks[ idx ].paint();
-}
-
-function drawRow( row ) {
-    for ( let column = 0; column < bricksPerRow; column++ ) {
-        drawBrick( column, row );
-    }
-}
-
-function drawWall() {
-    for (let row = 0; row < numRows; row++) {
-        drawRow( row );
-    }
-}
-
-function resizeBricks() {
-    //Primero redimensiona el Canvas:
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    //Acá se reajustan el tamaño de los ladrillos, que ahora son varibales:
-    for ( let row = 0; row < numRows; row++ ) {
-        for (let col = 0; col < bricksPerRow; col ++) {
-            const idx = row * bricksPerRow + col;
-            bricks[ idx ].resize();
-        }
-    }
-}
+wall.init();
 
 function drawGame() {
-    resizeBricks();
-    drawWall();
+    canvas.resize();
+    wall.resize();
+    wall.paint();
 }
 
 //Cada vez que ocurre el suceso de redimensionamiento de ventana:
 window.onresize = drawGame;
-
-// Crear la pared:
-createWall();
 
 // Pinta el juego apenas es cargada la página:
 drawGame();
