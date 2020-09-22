@@ -9,6 +9,17 @@ canvas.resize = function () {
     this.height = window.innerHeight;
 }
 
+// limpia el canvas luego de que la bola pasa
+canvas.clear = function ( ctx ) {
+    ctx.fillStyle = this.style.backgroundColor;
+    ctx.fillRect(
+        0,
+        0,
+        this.width,
+        this.height
+    );
+};
+
 //Esto es para conseguir un contexto gráfico:
 const ctx = canvas.getContext('2d');
 
@@ -16,23 +27,36 @@ const ctx = canvas.getContext('2d');
 
 const ball = {
   // Atributos:
-    x: 0,
-    y: 0,
+    x: ( window.innerWidth / 2 ),
+    y: ( window.innerHeight / 2 ),
     dx: 1, // Empieza el movimiento a la derecha.
     dy: 1, // Empieza el movimiento hacia abajo.
-    r: 1,
+    r: 0,
     color: 'blue',
 
   // Métodos:
     resize: function() {
-        this.x = ( window.innerWidth / 2 );
-        this.y = ( window.innerHeight / 2 );
         this.r = ( window.innerWidth / 40 );
     },
 
+    // Que debe hacer cuando toque los bordes:
+    checkBounds: function() {
+        const left = this.x - ( this.r / 2 );
+        const right = this.x + ( this.r / 2 );
+        const top = this.y - ( this.r / 2 );
+        const bottom = this.y + ( this.r / 2 );
+
+        if ( left <= 0 )             this.dx = -this.dx;
+        if ( right >= canvas.width ) this.dx = -this.dx;
+        if ( top <= 0 )              this.dy = -this.dy;
+        if ( bottom >= canvas.height ) this.dy = -this.dy;
+
+    },
     move: function () {
       this.x += this.dx;
       this.y += this.dy;
+
+      this.checkBounds();
     },
 
     paint: function ( ctx ) {
@@ -54,7 +78,25 @@ const ball = {
     },
 };
 
+let paused = false;
+
+window.onkeydown = function ( e ) {
+    e.preventDefault();
+
+    paused = !paused;
+
+    if ( !paused ) {
+        window.requestAnimationFrame( drawGame );
+    }
+};
+
 function drawGame() {
+
+    if ( paused ) {
+        return;
+    }
+
+    canvas.clear( ctx );
 
     wall.paint( ctx );
     ball.paint( ctx );
@@ -63,6 +105,7 @@ function drawGame() {
 }
 
 function resize () {
+
   canvas.resize();
   wall.resize();
   ball.resize();
